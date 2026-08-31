@@ -1,0 +1,59 @@
+### Maven ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Java ###
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+
+### Build logs from local troubleshooting ###
+build.log
+*.log
+
+### IDE - VS Code ###
+.vscode/
+
+### IDE - IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### IDE - Eclipse ###
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Environment / secrets ###
+.env
+.env.*
+!.env.example
+
+### Frontend###
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+### Docker ###
+docker-compose.override.yml
+
+.agents/

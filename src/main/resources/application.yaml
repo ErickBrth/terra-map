@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: terramap
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/terramap}
+    username: ${DB_USER:terramap}
+    # Throwaway credential for local development only.
+    # The docker profile requires DB_PASSWORD to be set and has no fallback.
+    password: ${DB_PASSWORD:terramap}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      connection-timeout: 3000
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema. 'update' would silently drift from the migrations.
+      ddl-auto: validate
+    # Keeps the connection out of the view rendering phase and returns it to the pool sooner.
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  error:
+    # Stack traces leak schema names, library versions and internal structure.
+    include-stacktrace: never
+  tomcat:
+    max-http-form-post-size: 512KB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+terramap:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  search:
+    max-radius-meters: 50000
+    max-page-size: 200
+  geometry:
+    max-vertices: 1000
