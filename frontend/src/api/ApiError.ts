@@ -1,0 +1,28 @@
+import type { ApiProblemDetail } from '../types/api';
+
+/**
+ * Wraps a non-2xx API response. Carries the parsed RFC 7807 Problem Details
+ * body so callers can branch on `status` (409 = overlap, 422 = invalid geometry,
+ * 400 = validation) without re-parsing the response themselves.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly problem: ApiProblemDetail;
+
+  private constructor(problem: ApiProblemDetail) {
+    super(problem.detail ?? problem.title ?? `Request failed with status ${problem.status}`);
+    this.name = 'ApiError';
+    this.status = problem.status;
+    this.problem = problem;
+  }
+
+  static async fromResponse(response: Response): Promise<ApiError> {
+    try {
+      const body = (await response.json()) as ApiProblemDetail;
+      return new ApiError({ ...body, status: body.status ?? response.status });
+    } catch {
+      // Response wasn't JSON (e.g. a network gateway error page) — fall back to a minimal shape.
+      return new ApiError({ status: response.status, title: response.statusText });
+    }
+  }
+}
