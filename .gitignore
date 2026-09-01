@@ -45,6 +45,8 @@ Thumbs.db
 frontend/node_modules/
 frontend/dist/
 frontend/coverage/
+frontend/*.tsbuildinfo
+frontend/*.timestamp-*.mjs
 
 ### Docker ###
 docker-compose.override.yml
