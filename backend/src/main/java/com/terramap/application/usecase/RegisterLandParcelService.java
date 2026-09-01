@@ -16,13 +16,6 @@ import java.util.UUID;
 /**
  * Orchestrates the registration of a new land parcel.
  *
- * <p>Execution flow:
- * <ol>
- *   <li>Validate geometry (SRID, validity, vertex count)</li>
- *   <li>Check for interior-interior overlap with existing parcels (JTS + DB)</li>
- *   <li>Persist and return the new parcel</li>
- * </ol>
- *
  * <p>The overlap check is performed at the application layer (fast, in-memory,
  * against a pre-filtered set) AND enforced at the database layer via a trigger
  * ({@code trg_land_parcel_no_overlap}). The dual check prevents race conditions.
@@ -44,16 +37,13 @@ public class RegisterLandParcelService implements RegisterLandParcelUseCase {
 
     @Override
     public LandParcel register(Command command) {
-        // 1. Geometry validation (throws GeometryValidationException → 422)
         geometryValidator.validate(command.boundary());
 
-        // 2. Overlap check — query only parcels with bounding-box overlap first
         List<UUID> overlappingIds = repository.findOverlappingIds(command.boundary());
         if (!overlappingIds.isEmpty()) {
             throw new OverlappingParcelException(overlappingIds);
         }
 
-        // 3. Create aggregate and persist
         LandParcel parcel = LandParcel.create(
                 command.title(),
                 command.description(),

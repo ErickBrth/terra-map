@@ -94,6 +94,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("type", "https://terramap.dev/errors/bad-request");
+        body.put("title", "Bad Request");
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("detail", "Invalid parameter value for: " + ex.getName());
+        body.put("instance", request.getRequestURI());
+        body.put("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, HttpServletRequest request) {
         Map<String, Object> body = new LinkedHashMap<>();

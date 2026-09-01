@@ -206,12 +206,10 @@ class LandParcelControllerTest {
     }
 
     @Test
-    void getByIdOnMalformedUuidIsHandledByExceptionHandler() throws Exception {
-        // NOTE: MethodArgumentTypeMismatchException is not IllegalArgumentException and has no
-        // dedicated @ExceptionHandler, so it currently falls through to the generic Exception
-        // handler and returns 500 instead of 400. Documented here as a known gap rather than
-        // silently asserting the "wrong" status; add a dedicated handler to fix this properly.
+    void getByIdOnMalformedUuidReturns400BadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/parcels/{id}", "not-a-uuid"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.title").value("Bad Request"));
     }
 }
