@@ -31,12 +31,12 @@ public class LandParcel {
     private final Polygon boundary;
     private final Instant createdAt;
     private Instant updatedAt;
-    private long version;
+    private final Long version;
 
     private LandParcel(UUID id, String title, String description,
                        Money totalPrice, ContactInfo contact,
                        ParcelStatus status, Polygon boundary,
-                       Instant createdAt, Instant updatedAt, long version) {
+                       Instant createdAt, Instant updatedAt, Long version) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -83,7 +83,7 @@ public class LandParcel {
         return new LandParcel(
                 UUID.randomUUID(), title.strip(), description,
                 totalPrice, contact, ParcelStatus.AVAILABLE,
-                boundary, now, now, 0L);
+                boundary, now, now, null);
     }
 
     /**
@@ -93,7 +93,7 @@ public class LandParcel {
     public static LandParcel reconstitute(UUID id, String title, String description,
                                           Money totalPrice, ContactInfo contact,
                                           ParcelStatus status, Polygon boundary,
-                                          Instant createdAt, Instant updatedAt, long version) {
+                                          Instant createdAt, Instant updatedAt, Long version) {
         return new LandParcel(id, title, description, totalPrice, contact,
                 status, boundary, createdAt, updatedAt, version);
     }
@@ -109,7 +109,7 @@ public class LandParcel {
     public Polygon getBoundary() { return boundary; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public Long getVersion() { return version; }
 
     // ── Business operations ───────────────────────────────────────────────────
 

@@ -3,6 +3,10 @@ import type { ParcelProperties } from '../map/hooks/useFeaturePopup';
 interface ParcelPopupProps {
   parcel: ParcelProperties | null;
   onClose: () => void;
+  onReserve: (id: string) => void;
+  onMarkSold: (id: string) => void;
+  busy: boolean;
+  actionError: string | null;
 }
 
 function formatPrice(totalPrice?: number, currency?: string): string | null {
@@ -20,7 +24,7 @@ function formatPrice(totalPrice?: number, currency?: string): string | null {
  * this content. The description comes from an anonymous user and is the
  * most likely XSS vector in the whole project.
  */
-export function ParcelPopup({ parcel, onClose }: ParcelPopupProps) {
+export function ParcelPopup({ parcel, onClose, onReserve, onMarkSold, busy, actionError }: ParcelPopupProps) {
   if (!parcel) return <div className="parcel-popup" hidden />;
 
   const price = formatPrice(parcel.totalPrice, parcel.currency);
@@ -44,6 +48,21 @@ export function ParcelPopup({ parcel, onClose }: ParcelPopupProps) {
           {parcel.contact.phone && <span>{parcel.contact.phone}</span>}
         </div>
       )}
+
+      {actionError && <p className="form-error" role="alert">{actionError}</p>}
+
+      <div className="parcel-popup-actions">
+        {parcel.status === 'AVAILABLE' && (
+          <button disabled={busy} onClick={() => onReserve(parcel.id)}>
+            Reserve
+          </button>
+        )}
+        {parcel.status !== 'SOLD' && (
+          <button disabled={busy} onClick={() => onMarkSold(parcel.id)}>
+            Mark as sold
+          </button>
+        )}
+      </div>
     </div>
   );
 }

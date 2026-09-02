@@ -9,6 +9,7 @@ import { ParcelForm } from '../parcel/ParcelForm';
 import { ParcelPopup } from '../parcel/ParcelPopup';
 import { useRegisterParcel } from '../parcel/hooks/useRegisterParcel';
 import { useSearchParcels } from '../search/hooks/useSearchParcels';
+import { useUpdateParcelStatus } from '../parcel/hooks/useUpdateParcelStatus';
 
 export function MapCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,6 +41,7 @@ export function MapCanvas() {
   useDrawCircle(map, mode === 'draw-circle', search.onRadiusChange, search.onCircleDrawn);
   // Clicking to open a popup only makes sense while not mid-drawing.
   const { selected, close } = useFeaturePopup(map, popupRef, mode === 'idle');
+  const statusUpdate = useUpdateParcelStatus(() => close());
 
   function handleStartRegister() {
     register.startDrawing();
@@ -76,7 +78,14 @@ export function MapCanvas() {
       {/* Overlay target must always be mounted (even hidden) so ol.Overlay has
           a stable DOM element to attach to before the first feature is clicked. */}
       <div ref={popupRef}>
-        <ParcelPopup parcel={selected} onClose={close} />
+        <ParcelPopup
+          parcel={selected}
+          onClose={close}
+          onReserve={statusUpdate.reserve}
+          onMarkSold={statusUpdate.markSold}
+          busy={statusUpdate.pending}
+          actionError={statusUpdate.errorMessage}
+        />
       </div>
 
       {(register.step === 'form-open' || register.step === 'submitting') && register.pendingBoundary && (

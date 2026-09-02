@@ -5,6 +5,7 @@ import com.terramap.application.exception.ParcelNotFoundException;
 import com.terramap.application.port.in.GetLandParcelUseCase;
 import com.terramap.application.port.in.RegisterLandParcelUseCase;
 import com.terramap.application.port.in.SearchLandParcelsUseCase;
+import com.terramap.application.port.in.UpdateParcelStatusUseCase;
 import com.terramap.domain.model.ContactInfo;
 import com.terramap.domain.model.LandParcel;
 import com.terramap.domain.model.Money;
@@ -40,6 +41,9 @@ class LandParcelControllerTest {
 
     @MockitoBean
     private GetLandParcelUseCase getLandParcelUseCase;
+
+    @MockitoBean
+    private UpdateParcelStatusUseCase updateParcelStatusUseCase;
 
     private static final Money PRICE = new Money(new BigDecimal("250000.00"), "BRL");
     private static final ContactInfo CONTACT = new ContactInfo("Jane Doe", "jane@example.com", "+55 11 90000-0000");
@@ -211,5 +215,60 @@ class LandParcelControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.title").value("Bad Request"));
+    }
+
+    // ── PATCH /api/v1/parcels/{id}/reserve ──────────────────────────────────
+
+    @Test
+    void reserveReturns200WithUpdatedStatus() throws Exception {
+        LandParcel parcel = sampleParcel();
+        parcel.markReserved();
+        when(updateParcelStatusUseCase.reserve(parcel.getId())).thenReturn(parcel);
+
+        mockMvc.perform(patch("/api/v1/parcels/{id}/reserve", parcel.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RESERVED"));
+    }
+
+    @Test
+    void reserveReturns404WhenParcelNotFound() throws Exception {
+        UUID missingId = UUID.randomUUID();
+        when(updateParcelStatusUseCase.reserve(missingId)).thenThrow(new ParcelNotFoundException(missingId));
+
+        mockMvc.perform(patch("/api/v1/parcels/{id}/reserve", missingId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void reserveReturns409WhenParcelIsNotAvailable() throws Exception {
+        UUID soldId = UUID.randomUUID();
+        when(updateParcelStatusUseCase.reserve(soldId))
+                .thenThrow(new IllegalStateException("Only AVAILABLE parcels can be reserved"));
+
+        mockMvc.perform(patch("/api/v1/parcels/{id}/reserve", soldId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("Only AVAILABLE parcels can be reserved"));
+    }
+
+    // ── PATCH /api/v1/parcels/{id}/sell ─────────────────────────────────────
+
+    @Test
+    void markSoldReturns200WithUpdatedStatus() throws Exception {
+        LandParcel parcel = sampleParcel();
+        parcel.markSold();
+        when(updateParcelStatusUseCase.markSold(parcel.getId())).thenReturn(parcel);
+
+        mockMvc.perform(patch("/api/v1/parcels/{id}/sell", parcel.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SOLD"));
+    }
+
+    @Test
+    void markSoldReturns404WhenParcelNotFound() throws Exception {
+        UUID missingId = UUID.randomUUID();
+        when(updateParcelStatusUseCase.markSold(missingId)).thenThrow(new ParcelNotFoundException(missingId));
+
+        mockMvc.perform(patch("/api/v1/parcels/{id}/sell", missingId))
+                .andExpect(status().isNotFound());
     }
 }

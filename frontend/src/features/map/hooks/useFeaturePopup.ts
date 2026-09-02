@@ -5,6 +5,7 @@ import Overlay from 'ol/Overlay';
 import { PARCEL_LAYER_NAME } from '../layers/parcelLayer';
 
 export interface ParcelProperties {
+  id: string;
   title: string;
   status: string;
   totalPrice?: number;
@@ -39,7 +40,7 @@ export function useFeaturePopup(
     });
     map.addOverlay(overlay);
 
-    const onClick = (event: MapBrowserEvent<UIEvent>) => {
+    const onClick = (event: MapBrowserEvent<any>) => {
       const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f, {
         layerFilter: (layer) => layer.get('name') === PARCEL_LAYER_NAME,
         hitTolerance: 4, // matters on touch screens: hitting a thin polygon border is hard otherwise
@@ -51,11 +52,11 @@ export function useFeaturePopup(
         return;
       }
 
-      setSelected(feature.getProperties() as ParcelProperties);
+      setSelected({ ...feature.getProperties(), id: String(feature.getId()) } as ParcelProperties);
       overlay.setPosition(event.coordinate);
     };
 
-    const onPointerMove = (event: MapBrowserEvent<UIEvent>) => {
+    const onPointerMove = (event: MapBrowserEvent<any>) => {
       const target = map.getTargetElement();
       if (target) {
         target.style.cursor = map.hasFeatureAtPixel(event.pixel, {

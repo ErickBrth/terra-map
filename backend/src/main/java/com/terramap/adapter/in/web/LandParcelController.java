@@ -4,6 +4,7 @@ import com.terramap.adapter.in.web.dto.*;
 import com.terramap.application.port.in.GetLandParcelUseCase;
 import com.terramap.application.port.in.RegisterLandParcelUseCase;
 import com.terramap.application.port.in.SearchLandParcelsUseCase;
+import com.terramap.application.port.in.UpdateParcelStatusUseCase;
 import com.terramap.domain.model.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,13 +31,16 @@ public class LandParcelController {
     private final RegisterLandParcelUseCase registerLandParcelUseCase;
     private final SearchLandParcelsUseCase searchLandParcelsUseCase;
     private final GetLandParcelUseCase getLandParcelUseCase;
+    private final UpdateParcelStatusUseCase updateParcelStatusUseCase;
 
     public LandParcelController(RegisterLandParcelUseCase registerLandParcelUseCase,
                                 SearchLandParcelsUseCase searchLandParcelsUseCase,
-                                GetLandParcelUseCase getLandParcelUseCase) {
+                                GetLandParcelUseCase getLandParcelUseCase,
+                                UpdateParcelStatusUseCase updateParcelStatusUseCase) {
         this.registerLandParcelUseCase = registerLandParcelUseCase;
         this.searchLandParcelsUseCase = searchLandParcelsUseCase;
         this.getLandParcelUseCase = getLandParcelUseCase;
+        this.updateParcelStatusUseCase = updateParcelStatusUseCase;
     }
 
     @PostMapping
@@ -78,7 +82,7 @@ public class LandParcelController {
     }
 
     @PostMapping("/search")
-    @Operation(summary = "Search parcels within a circular radius", description = "Returns GeoJSON FeatureCollection of parcels intersecting the search circle")
+    @Operation(summary = "Search parcels within a circular radius", description = "Returns GeoJSON FeatureCollection of parcels intersecting the search circle, optionally filtered by max price and status")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Search results returned successfully",
                     content = @Content(schema = @Schema(implementation = ParcelFeatureCollectionDto.class))),
@@ -87,9 +91,12 @@ public class LandParcelController {
     public ResponseEntity<ParcelFeatureCollectionDto> search(@Valid @RequestBody SearchParcelRequest request) {
         Point center = request.center().toJtsPoint();
         SearchArea searchArea = new SearchArea(center, request.radiusInMeters());
+        SearchFiltersDto filters = request.filters();
 
         SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(
                 searchArea,
+                filters != null ? filters.maxPrice() : null,
+                filters != null ? filters.status() : null,
                 request.effectivePage(),
                 request.effectiveSize()
         );
@@ -118,6 +125,31 @@ public class LandParcelController {
     })
     public ResponseEntity<LandParcelResponse> getById(@PathVariable("id") UUID id) {
         LandParcel parcel = getLandParcelUseCase.getById(id);
+        return ResponseEntity.ok(LandParcelResponse.fromDomain(parcel));
+    }
+
+    @PatchMapping("/{id}/reserve")
+    @Operation(summary = "Reserve a parcel", description = "Marks an AVAILABLE parcel as RESERVED, taking it off the market while a deal is negotiated")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Parcel reserved",
+                    content = @Content(schema = @Schema(implementation = LandParcelResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Parcel not found"),
+            @ApiResponse(responseCode = "409", description = "Parcel is not currently AVAILABLE")
+    })
+    public ResponseEntity<LandParcelResponse> reserve(@PathVariable("id") UUID id) {
+        LandParcel parcel = updateParcelStatusUseCase.reserve(id);
+        return ResponseEntity.ok(LandParcelResponse.fromDomain(parcel));
+    }
+
+    @PatchMapping("/{id}/sell")
+    @Operation(summary = "Mark a parcel as sold", description = "Marks a parcel as SOLD, removing it from active search results")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Parcel marked as sold",
+                    content = @Content(schema = @Schema(implementation = LandParcelResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Parcel not found")
+    })
+    public ResponseEntity<LandParcelResponse> markSold(@PathVariable("id") UUID id) {
+        LandParcel parcel = updateParcelStatusUseCase.markSold(id);
         return ResponseEntity.ok(LandParcelResponse.fromDomain(parcel));
     }
 }

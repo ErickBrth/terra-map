@@ -91,6 +91,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    /**
+     * Thrown by domain transitions such as {@link com.terramap.domain.model.LandParcel#markReserved()}
+     * when the parcel isn't in a state that allows it (e.g. reserving an already-SOLD parcel).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex, HttpServletRequest request) {
+        Map<String, Object> body = problemDetail(HttpStatus.CONFLICT, "invalid-state-transition", "Invalid State Transition", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         Map<String, Object> body = problemDetail(HttpStatus.BAD_REQUEST, "bad-request", "Bad Request", ex.getMessage(), request);

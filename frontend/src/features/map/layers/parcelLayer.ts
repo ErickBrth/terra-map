@@ -69,3 +69,14 @@ export function toParcelFeature(coordinates: number[][][], props: ParcelFeatureP
   feature.set('contact', props.contact);
   return feature;
 }
+
+/**
+ * Updates the status of an already-rendered feature in place (e.g. after
+ * reserving or marking it sold). Calling `.set()` triggers the layer's style
+ * function to re-run, so the parcel's colour updates on the map immediately
+ * without needing a fresh search.
+ */
+export function updateFeatureStatus(id: string, status: string): void {
+  const feature = parcelSource.getFeatureById(id);
+  feature?.set('status', status);
+}

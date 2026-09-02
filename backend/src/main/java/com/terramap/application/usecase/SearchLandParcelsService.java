@@ -9,7 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Orchestrates parcel search within a circular geographic area.
+ * Orchestrates parcel search within a circular geographic area, with optional
+ * price and status filters applied at the database level.
  */
 @Service
 @Transactional(readOnly = true)
@@ -23,6 +24,7 @@ public class SearchLandParcelsService implements SearchLandParcelsUseCase {
 
     @Override
     public List<LandParcel> search(Query query) {
-        return repository.findWithinRadius(query.searchArea(), query.page(), query.size());
+        return repository.findWithinRadius(
+                query.searchArea(), query.maxPrice(), query.status(), query.page(), query.size());
     }
 }

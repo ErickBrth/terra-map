@@ -50,14 +50,18 @@ class LandParcelPersistenceAdapterIT {
     }
 
     private LandParcelEntity persistEntity(Polygon boundary) {
+        return persistEntity(boundary, new BigDecimal("100000.00"), "AVAILABLE");
+    }
+
+    private LandParcelEntity persistEntity(Polygon boundary, BigDecimal totalPrice, String status) {
         LandParcelEntity entity = new LandParcelEntity();
         entity.setId(UUID.randomUUID());
         entity.setTitle("Existing parcel");
-        entity.setTotalPrice(new BigDecimal("100000.00"));
+        entity.setTotalPrice(totalPrice);
         entity.setCurrency("BRL");
         entity.setContactName("Existing Owner");
         entity.setContactEmail("owner@example.com");
-        entity.setStatus("AVAILABLE");
+        entity.setStatus(status);
         entity.setBoundary(boundary);
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
@@ -164,7 +168,7 @@ class LandParcelPersistenceAdapterIT {
 
         // Center of the search circle sits inside Parcel A's own bounding area
         List<LandParcelEntity> results =
-                jpaRepository.findWithinRadius(-46.630, -23.550, 500, 10, 0);
+                jpaRepository.findWithinRadius(-46.630, -23.550, 500, null, null, 10, 0);
 
         assertThat(results).hasSize(1);
     }
@@ -175,7 +179,7 @@ class LandParcelPersistenceAdapterIT {
 
         // Searching in Sao Paulo; Rio de Janeiro is ~350km away, far beyond a 1km radius
         List<LandParcelEntity> results =
-                jpaRepository.findWithinRadius(-46.630, -23.550, 1000, 10, 0);
+                jpaRepository.findWithinRadius(-46.630, -23.550, 1000, null, null, 10, 0);
 
         assertThat(results).isEmpty();
     }
@@ -187,7 +191,7 @@ class LandParcelPersistenceAdapterIT {
 
         // Center closer to Parcel A than to its eastern neighbour
         List<LandParcelEntity> results =
-                jpaRepository.findWithinRadius(-46.6345, -23.550, 5000, 10, 0);
+                jpaRepository.findWithinRadius(-46.6345, -23.550, 5000, null, null, 10, 0);
 
         assertThat(results).hasSizeGreaterThanOrEqualTo(2);
         assertThat(results.get(0).getId()).isEqualTo(near.getId());
@@ -199,13 +203,52 @@ class LandParcelPersistenceAdapterIT {
         persistEntity(GeometryFixtures.saoPauloParcelAdjacentToA());
 
         List<LandParcelEntity> firstPage =
-                jpaRepository.findWithinRadius(-46.630, -23.550, 5000, 1, 0);
+                jpaRepository.findWithinRadius(-46.630, -23.550, 5000, null, null, 1, 0);
         List<LandParcelEntity> secondPage =
-                jpaRepository.findWithinRadius(-46.630, -23.550, 5000, 1, 1);
+                jpaRepository.findWithinRadius(-46.630, -23.550, 5000, null, null, 1, 1);
 
         assertThat(firstPage).hasSize(1);
         assertThat(secondPage).hasSize(1);
         assertThat(firstPage.get(0).getId()).isNotEqualTo(secondPage.get(0).getId());
+    }
+
+    // ── Search filters (maxPrice, status) applied at the SQL level ──────────
+
+    @Test
+    void excludesParcelsAbovePriceFilter() {
+        persistEntity(GeometryFixtures.saoPauloParcelA(), new BigDecimal("100000.00"), "AVAILABLE");
+        persistEntity(GeometryFixtures.saoPauloParcelAdjacentToA(), new BigDecimal("900000.00"), "AVAILABLE");
+
+        List<LandParcelEntity> underBudget = jpaRepository.findWithinRadius(
+                -46.630, -23.550, 5000, new BigDecimal("500000.00"), null, 10, 0);
+
+        assertThat(underBudget).hasSize(1);
+        assertThat(underBudget.get(0).getTotalPrice()).isEqualByComparingTo("100000.00");
+    }
+
+    @Test
+    void filtersByStatus() {
+        persistEntity(GeometryFixtures.saoPauloParcelA(), new BigDecimal("100000.00"), "AVAILABLE");
+        persistEntity(GeometryFixtures.saoPauloParcelAdjacentToA(), new BigDecimal("100000.00"), "SOLD");
+
+        List<LandParcelEntity> availableOnly = jpaRepository.findWithinRadius(
+                -46.630, -23.550, 5000, null, "AVAILABLE", 10, 0);
+
+        assertThat(availableOnly).hasSize(1);
+        assertThat(availableOnly.get(0).getStatus()).isEqualTo("AVAILABLE");
+    }
+
+    @Test
+    void combinesRadiusPriceAndStatusFilters() {
+        persistEntity(GeometryFixtures.saoPauloParcelA(), new BigDecimal("100000.00"), "AVAILABLE");
+        persistEntity(GeometryFixtures.saoPauloParcelAdjacentToA(), new BigDecimal("100000.00"), "SOLD");
+        persistEntity(GeometryFixtures.rioDeJaneiroParcel(), new BigDecimal("50000.00"), "AVAILABLE");
+
+        // Radius excludes Rio; status excludes the sold neighbour -> only Parcel A remains
+        List<LandParcelEntity> results = jpaRepository.findWithinRadius(
+                -46.630, -23.550, 5000, new BigDecimal("500000.00"), "AVAILABLE", 10, 0);
+
+        assertThat(results).hasSize(1);
     }
 
     // ── Adapter round trip (domain <-> entity mapping, incl. SRID) ──────────
@@ -241,5 +284,21 @@ class LandParcelPersistenceAdapterIT {
         List<UUID> overlaps = adapter.findOverlappingIds(GeometryFixtures.saoPauloParcelOverlappingA());
 
         assertThat(overlaps).containsExactly(existing.getId());
+    }
+
+    @Test
+    void adapterSaveExistingParcelUpdatesStatusWithoutConflict() {
+        LandParcel parcel = LandParcel.create(
+                "Status test parcel", null, PRICE, CONTACT, GeometryFixtures.saoPauloParcelA());
+        LandParcel saved = adapter.save(parcel);
+
+        LandParcel found = adapter.findById(saved.getId()).orElseThrow();
+        found.markReserved();
+
+        LandParcel updated = adapter.save(found);
+        assertThat(updated.getStatus()).isEqualTo(ParcelStatus.RESERVED);
+
+        LandParcel reloaded = adapter.findById(saved.getId()).orElseThrow();
+        assertThat(reloaded.getStatus()).isEqualTo(ParcelStatus.RESERVED);
     }
 }

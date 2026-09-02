@@ -314,3 +314,30 @@ html, body, #root {
   padding-top: 8px;
   gap: 3px;
 }
+
+.parcel-popup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.parcel-popup-actions button {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #d0d7de;
+  background: #f6f8fa;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.parcel-popup-actions button:hover:not(:disabled) {
+  background: #eaeef2;
+}
+
+.parcel-popup-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

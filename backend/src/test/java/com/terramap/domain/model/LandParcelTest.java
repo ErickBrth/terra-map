@@ -28,7 +28,7 @@ class LandParcelTest {
         assertThat(parcel.getStatus()).isEqualTo(ParcelStatus.AVAILABLE);
         assertThat(parcel.getTitle()).isEqualTo("Riverside lot");
         assertThat(parcel.getCreatedAt()).isEqualTo(parcel.getUpdatedAt());
-        assertThat(parcel.getVersion()).isZero();
+        assertThat(parcel.getVersion()).isNull();
     }
 
     @Test
@@ -48,8 +48,8 @@ class LandParcelTest {
     @Test
     void rejectsBlankTitle() {
         assertThatThrownBy(() -> LandParcel.create("   ", null, PRICE, CONTACT, validBoundary()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("title");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("title");
     }
 
     @Test
@@ -57,7 +57,7 @@ class LandParcelTest {
         String tooLong = "x".repeat(121);
 
         assertThatThrownBy(() -> LandParcel.create(tooLong, null, PRICE, CONTACT, validBoundary()))
-                .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -74,8 +74,8 @@ class LandParcelTest {
         String tooLong = "x".repeat(2001);
 
         assertThatThrownBy(() -> LandParcel.create("Title", tooLong, PRICE, CONTACT, validBoundary()))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("description");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("description");
     }
 
     @Test
@@ -84,32 +84,32 @@ class LandParcelTest {
         wrongSrid.setSRID(3857);
 
         assertThatThrownBy(() -> LandParcel.create("Title", null, PRICE, CONTACT, wrongSrid))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("4326");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("4326");
     }
 
     @Test
     void rejectsNullTitle() {
         assertThatThrownBy(() -> LandParcel.create(null, null, PRICE, CONTACT, validBoundary()))
-                .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void rejectsNullPrice() {
         assertThatThrownBy(() -> LandParcel.create("Title", null, null, CONTACT, validBoundary()))
-                .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void rejectsNullContact() {
         assertThatThrownBy(() -> LandParcel.create("Title", null, PRICE, null, validBoundary()))
-                .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void rejectsNullBoundary() {
         assertThatThrownBy(() -> LandParcel.create("Title", null, PRICE, CONTACT, null))
-                .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -127,8 +127,8 @@ class LandParcelTest {
         parcel.markReserved();
 
         assertThatThrownBy(parcel::markReserved)
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("AVAILABLE");
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("AVAILABLE");
     }
 
     @Test
@@ -146,7 +146,7 @@ class LandParcelTest {
         Instant now = Instant.now();
 
         LandParcel parcel = LandParcel.reconstitute(
-                id, "Title", "Desc", PRICE, CONTACT, ParcelStatus.SOLD, validBoundary(), now, now, 5L);
+            id, "Title", "Desc", PRICE, CONTACT, ParcelStatus.SOLD, validBoundary(), now, now, 5L);
 
         assertThat(parcel.getId()).isEqualTo(id);
         assertThat(parcel.getStatus()).isEqualTo(ParcelStatus.SOLD);
@@ -157,8 +157,8 @@ class LandParcelTest {
     void equalityIsBasedOnIdOnly() {
         UUID id = UUID.randomUUID();
         Instant now = Instant.now();
-        LandParcel a = LandParcel.reconstitute(id, "A", null, PRICE, CONTACT, ParcelStatus.AVAILABLE, validBoundary(), now, now, 0);
-        LandParcel b = LandParcel.reconstitute(id, "B", "different", PRICE, CONTACT, ParcelStatus.SOLD, validBoundary(), now, now, 3);
+        LandParcel a = LandParcel.reconstitute(id, "A", null, PRICE, CONTACT, ParcelStatus.AVAILABLE, validBoundary(), now, now, 0L);
+        LandParcel b = LandParcel.reconstitute(id, "B", "different", PRICE, CONTACT, ParcelStatus.SOLD, validBoundary(), now, now, 3L);
 
         assertThat(a).isEqualTo(b).hasSameHashCodeAs(b);
     }

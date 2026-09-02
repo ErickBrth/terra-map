@@ -7,6 +7,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.WKTWriter;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,13 +43,14 @@ public class LandParcelPersistenceAdapter implements LandParcelRepositoryPort {
     }
 
     @Override
-    public List<LandParcel> findWithinRadius(com.terramap.domain.model.SearchArea searchArea, int page, int size) {
+    public List<LandParcel> findWithinRadius(SearchArea searchArea, BigDecimal maxPrice, ParcelStatus status, int page, int size) {
         double lon = searchArea.getCenter().getX(); // GeoJSON: [lon, lat] → X = lon
         double lat = searchArea.getCenter().getY();
         int offset = page * size;
 
         return jpaRepository
-                .findWithinRadius(lon, lat, searchArea.getRadiusInMeters(), size, offset)
+                .findWithinRadius(lon, lat, searchArea.getRadiusInMeters(), maxPrice,
+                        status != null ? status.name() : null, size, offset)
                 .stream()
                 .map(this::toDomain)
                 .toList();
@@ -80,12 +82,7 @@ public class LandParcelPersistenceAdapter implements LandParcelRepositoryPort {
         entity.setBoundary(domain.getBoundary());
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setUpdatedAt(domain.getUpdatedAt());
-        // A brand-new LandParcel reports version == 0, but Hibernate's own unsaved-value
-        // check (independent of Spring Data's Persistable) treats a non-null @Version as
-        // "this row already exists". Passing null here lets Hibernate initialise the version
-        // itself on INSERT. Persistable.isNew() (see LandParcelEntity) is what actually
-        // decides insert vs. update; this only avoids a second, conflicting signal.
-        entity.setVersion(domain.getVersion() > 0 ? domain.getVersion() : null);
+        entity.setVersion(domain.getVersion());
         return entity;
     }
 

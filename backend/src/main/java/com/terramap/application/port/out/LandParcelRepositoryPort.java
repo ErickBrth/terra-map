@@ -1,9 +1,11 @@
 package com.terramap.application.port.out;
 
 import com.terramap.domain.model.LandParcel;
+import com.terramap.domain.model.ParcelStatus;
 import com.terramap.domain.model.SearchArea;
 import org.locationtech.jts.geom.Polygon;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,14 +26,15 @@ public interface LandParcelRepositoryPort {
     Optional<LandParcel> findById(UUID id);
 
     /**
-     * Returns parcels whose boundary intersects the search circle, ordered by
-     * distance from the center (closest first).
+     * Returns parcels whose boundary intersects the search circle and match the
+     * optional filters, ordered by distance from the center (closest first).
+     * Either filter may be {@code null}, meaning "no constraint on that field."
      *
      * <p>Uses {@code ST_DWithin(boundary::geography, center::geography, radius)},
      * backed by a functional GiST index on the geography cast — never
      * {@code ST_Distance(...) < radius}, which would force a sequential scan.
      */
-    List<LandParcel> findWithinRadius(SearchArea searchArea, int page, int size);
+    List<LandParcel> findWithinRadius(SearchArea searchArea, BigDecimal maxPrice, ParcelStatus status, int page, int size);
 
     /**
      * Returns IDs of existing parcels that overlap with the candidate boundary.

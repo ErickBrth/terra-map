@@ -18,6 +18,8 @@ public record SearchParcelRequest(
         @DecimalMax(value = "50000.0", message = "Radius cannot exceed 50,000 metres")
         Double radiusInMeters,
 
+        @Valid SearchFiltersDto filters,
+
         @Schema(example = "0", defaultValue = "0")
         @Min(0) Integer page,
 

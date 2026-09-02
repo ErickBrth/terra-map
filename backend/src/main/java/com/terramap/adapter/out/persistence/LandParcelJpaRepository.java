@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +20,8 @@ public interface LandParcelJpaRepository extends JpaRepository<LandParcelEntity,
 
     /**
      * Finds parcels whose boundary intersects a circle centred at {@code (lon, lat)}
-     * with the given radius in real-world metres.
+     * with the given radius in real-world metres, optionally filtered by max
+     * price and/or status (either may be {@code null} to skip that filter).
      *
      * <p>{@code ST_DWithin} on the {@code geography} cast is the correct function here:
      * it computes distances in metres on the ellipsoid and uses the functional GiST index
@@ -38,6 +40,8 @@ public interface LandParcelJpaRepository extends JpaRepository<LandParcelEntity,
                       ST_SetSRID(ST_Point(:lon, :lat), 4326)::geography,
                       :radiusInMeters
                   )
+              AND (:maxPrice IS NULL OR lp.total_price <= :maxPrice)
+              AND (:status IS NULL OR lp.status = :status)
             ORDER BY lp.boundary::geography <-> ST_SetSRID(ST_Point(:lon, :lat), 4326)::geography
             LIMIT :size OFFSET :offset
             """, nativeQuery = true)
@@ -45,6 +49,8 @@ public interface LandParcelJpaRepository extends JpaRepository<LandParcelEntity,
             @Param("lon") double lon,
             @Param("lat") double lat,
             @Param("radiusInMeters") double radiusInMeters,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("status") String status,
             @Param("size") int size,
             @Param("offset") int offset
     );

@@ -1,8 +1,10 @@
 package com.terramap.application.port.in;
 
 import com.terramap.domain.model.LandParcel;
+import com.terramap.domain.model.ParcelStatus;
 import com.terramap.domain.model.SearchArea;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -11,13 +13,16 @@ import java.util.List;
 public interface SearchLandParcelsUseCase {
 
     /**
-     * Returns all parcels whose boundary intersects the search circle.
-     * Results are ordered by distance from the center (closest first).
+     * Returns all parcels whose boundary intersects the search circle and match
+     * the optional filters. Results are ordered by distance from the center
+     * (closest first).
      */
     List<LandParcel> search(Query query);
 
     record Query(
             SearchArea searchArea,
+            BigDecimal maxPrice,
+            ParcelStatus status,
             int page,
             int size
     ) {}
