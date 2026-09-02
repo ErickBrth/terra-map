@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { RadiusBadge } from './RadiusBadge';
+import { RadiusBadge } from '../../features/search/RadiusBadge';
 
 describe('RadiusBadge', () => {
   it('renders nothing when radius is null', () => {

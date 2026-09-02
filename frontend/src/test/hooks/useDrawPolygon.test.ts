@@ -2,16 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import Map from 'ol/Map';
 import View from 'ol/View';
-import { useDrawCircle } from './useDrawCircle';
+import { useDrawPolygon } from '../../features/map/hooks/useDrawPolygon';
 
-describe('useDrawCircle', () => {
-  it('attaches circle drawing interaction and layer when active and cleans up when inactive', () => {
+describe('useDrawPolygon', () => {
+  it('attaches drawing interaction and layer when active and cleans up when inactive', () => {
     const map = new Map({ view: new View() });
-    const onRadiusChange = vi.fn();
     const onComplete = vi.fn();
 
     const { rerender, unmount } = renderHook(
-      ({ active }) => useDrawCircle(map, active, onRadiusChange, onComplete),
+      ({ active }) => useDrawPolygon(map, active, onComplete),
       { initialProps: { active: true } },
     );
 

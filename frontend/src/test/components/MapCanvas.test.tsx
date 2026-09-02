@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MapCanvas } from './MapCanvas';
+import { MapCanvas } from '../../features/map/MapCanvas';
 
 describe('MapCanvas', () => {
-  it('renders map container, toolbar and buttons', async () => {
+  it('renders map container, toolbar, popup container and handles mode transitions', async () => {
     const user = userEvent.setup();
     render(<MapCanvas />);
 

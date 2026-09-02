@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSearchParcels } from './useSearchParcels';
-import * as landParcelApi from '../../../api/landParcelApi';
-import { ApiError } from '../../../api/ApiError';
-import type { ParcelFeatureCollection } from '../../../types/api';
+import { useSearchParcels } from '../../features/search/hooks/useSearchParcels';
+import * as landParcelApi from '../../api/landParcelApi';
+import { ApiError } from '../../api/ApiError';
+import type { ParcelFeatureCollection } from '../../types/api';
 
 describe('useSearchParcels', () => {
   beforeEach(() => {

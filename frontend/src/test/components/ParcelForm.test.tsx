@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ParcelForm } from './ParcelForm';
+import { ParcelForm } from '../../features/parcel/ParcelForm';
 import type { GeoJsonPolygon } from '../../types/api';
 
 describe('ParcelForm', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { registerParcel, getParcel, searchParcels } from './landParcelApi';
-import * as httpClient from './httpClient';
-import type { RegisterParcelRequest, LandParcelResponse, ParcelFeatureCollection } from '../types/api';
+import { registerParcel, getParcel, searchParcels } from '../../api/landParcelApi';
+import * as httpClient from '../../api/httpClient';
+import type { RegisterParcelRequest, LandParcelResponse, ParcelFeatureCollection } from '../../types/api';
 
 describe('landParcelApi', () => {
   beforeEach(() => {

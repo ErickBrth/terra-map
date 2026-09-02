@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Circle from 'ol/geom/Circle';
 import { fromLonLat } from 'ol/proj';
-import { trueRadiusInMetres } from './measure';
+import { trueRadiusInMetres } from '../../shared/geo/measure';
 
 describe('measure utils', () => {
   it('computes true ground radius by correcting Web Mercator distortion', () => {

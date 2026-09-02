@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ApiError } from './ApiError';
+import { ApiError } from '../../api/ApiError';
 
 describe('ApiError', () => {
   it('parses RFC 7807 JSON response body with detail properly', async () => {

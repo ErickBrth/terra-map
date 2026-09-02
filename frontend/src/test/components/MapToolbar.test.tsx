@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MapToolbar } from './MapToolbar';
+import { MapToolbar } from '../../features/map/MapToolbar';
 
 describe('MapToolbar', () => {
   it('renders register and search buttons in idle mode', async () => {

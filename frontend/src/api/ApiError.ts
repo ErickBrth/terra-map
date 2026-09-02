@@ -9,7 +9,7 @@ export class ApiError extends Error {
   readonly status: number;
   readonly problem: ApiProblemDetail;
 
-  private constructor(problem: ApiProblemDetail) {
+  constructor(problem: ApiProblemDetail) {
     const message = ApiError.extractMessage(problem);
     super(message);
     this.name = 'ApiError';

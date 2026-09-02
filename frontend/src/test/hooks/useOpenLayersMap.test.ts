@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useOpenLayersMap } from './useOpenLayersMap';
+import { useOpenLayersMap } from '../../features/map/hooks/useOpenLayersMap';
 
 describe('useOpenLayersMap', () => {
   it('initializes map on mount and disposes on unmount', () => {

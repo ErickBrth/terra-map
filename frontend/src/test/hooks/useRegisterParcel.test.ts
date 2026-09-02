@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useRegisterParcel } from './useRegisterParcel';
-import * as landParcelApi from '../../../api/landParcelApi';
-import { ApiError } from '../../../api/ApiError';
-import type { GeoJsonPolygon, LandParcelResponse } from '../../../types/api';
+import { useRegisterParcel } from '../../features/parcel/hooks/useRegisterParcel';
+import * as landParcelApi from '../../api/landParcelApi';
+import { ApiError } from '../../api/ApiError';
+import type { GeoJsonPolygon, LandParcelResponse } from '../../types/api';
 
 describe('useRegisterParcel', () => {
   const mockBoundary: GeoJsonPolygon = {

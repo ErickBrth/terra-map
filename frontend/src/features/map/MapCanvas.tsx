@@ -2,14 +2,17 @@ import { useEffect, useRef, useMemo } from 'react';
 import { useOpenLayersMap } from './hooks/useOpenLayersMap';
 import { useDrawPolygon } from './hooks/useDrawPolygon';
 import { useDrawCircle } from './hooks/useDrawCircle';
+import { useFeaturePopup } from './hooks/useFeaturePopup';
 import { createParcelLayer } from './layers/parcelLayer';
 import { MapToolbar } from './MapToolbar';
 import { ParcelForm } from '../parcel/ParcelForm';
+import { ParcelPopup } from '../parcel/ParcelPopup';
 import { useRegisterParcel } from '../parcel/hooks/useRegisterParcel';
 import { useSearchParcels } from '../search/hooks/useSearchParcels';
 
 export function MapCanvas() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const { map, isReady } = useOpenLayersMap(containerRef);
 
   const register = useRegisterParcel();
@@ -35,6 +38,8 @@ export function MapCanvas() {
 
   useDrawPolygon(map, mode === 'draw-parcel', register.onPolygonDrawn);
   useDrawCircle(map, mode === 'draw-circle', search.onRadiusChange, search.onCircleDrawn);
+  // Clicking to open a popup only makes sense while not mid-drawing.
+  const { selected, close } = useFeaturePopup(map, popupRef, mode === 'idle');
 
   function handleStartRegister() {
     register.startDrawing();
@@ -67,6 +72,12 @@ export function MapCanvas() {
           {search.errorMessage}
         </div>
       )}
+
+      {/* Overlay target must always be mounted (even hidden) so ol.Overlay has
+          a stable DOM element to attach to before the first feature is clicked. */}
+      <div ref={popupRef}>
+        <ParcelPopup parcel={selected} onClose={close} />
+      </div>
 
       {(register.step === 'form-open' || register.step === 'submitting') && register.pendingBoundary && (
         <div className="parcel-form-overlay">

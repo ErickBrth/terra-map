@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Polygon from 'ol/geom/Polygon';
 import { fromLonLat } from 'ol/proj';
-import { toGeoJsonPolygon, fromGeoJsonPolygonCoordinates } from './projection';
+import { toGeoJsonPolygon, fromGeoJsonPolygonCoordinates } from '../../shared/geo/projection';
 
 describe('projection utils', () => {
   it('converts an EPSG:3857 Polygon to EPSG:4326 GeoJSON with 6 decimal places', () => {

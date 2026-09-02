@@ -44,6 +44,10 @@ export function useRegisterParcel() {
       feature.setId(created.id);
       feature.set('title', created.title);
       feature.set('status', created.status);
+      feature.set('totalPrice', created.totalPrice);
+      feature.set('currency', created.currency);
+      feature.set('description', created.description);
+      feature.set('contact', created.contact);
       parcelSource.addFeature(feature);
 
       setPendingBoundary(null);
