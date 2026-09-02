@@ -1,10 +1,8 @@
 package com.terramap.application.port.in;
 
 import com.terramap.domain.model.LandParcel;
-import com.terramap.domain.model.ParcelStatus;
 import com.terramap.domain.model.SearchArea;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -20,9 +18,6 @@ public interface SearchLandParcelsUseCase {
 
     record Query(
             SearchArea searchArea,
-            BigDecimal maxPrice,
-            Double minAreaInSquareMeters,
-            ParcelStatus status,
             int page,
             int size
     ) {}

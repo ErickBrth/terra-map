@@ -5,8 +5,6 @@ import com.terramap.application.port.in.RegisterLandParcelUseCase;
 import com.terramap.application.port.out.LandParcelRepositoryPort;
 import com.terramap.domain.model.LandParcel;
 import com.terramap.domain.service.GeometryValidator;
-import com.terramap.domain.service.JtsOverlapPolicy;
-import com.terramap.domain.service.OverlapPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,22 +14,21 @@ import java.util.UUID;
 /**
  * Orchestrates the registration of a new land parcel.
  *
- * <p>The overlap check is performed at the application layer (fast, in-memory,
- * against a pre-filtered set) AND enforced at the database layer via a trigger
- * ({@code trg_land_parcel_no_overlap}). The dual check prevents race conditions.
+ * <p>The overlap rule (DE-9IM interior-interior intersection — see
+ * {@link LandParcelRepositoryPort#findOverlappingIds}) is enforced here for a
+ * clear 409 response, AND again as a database trigger. The dual check
+ * prevents race conditions between two concurrent registrations.
  */
 @Service
 @Transactional
 public class RegisterLandParcelService implements RegisterLandParcelUseCase {
 
     private final GeometryValidator geometryValidator;
-    private final OverlapPolicy overlapPolicy;
     private final LandParcelRepositoryPort repository;
 
     public RegisterLandParcelService(GeometryValidator geometryValidator,
                                      LandParcelRepositoryPort repository) {
         this.geometryValidator = geometryValidator;
-        this.overlapPolicy = new JtsOverlapPolicy();
         this.repository = repository;
     }
 

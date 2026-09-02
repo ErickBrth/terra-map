@@ -1,10 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
-import Feature from 'ol/Feature';
-import Polygon from 'ol/geom/Polygon';
 import { searchParcels } from '../../../api/landParcelApi';
 import { ApiError } from '../../../api/ApiError';
-import { fromGeoJsonPolygonCoordinates } from '../../../shared/geo/projection';
-import { parcelSource } from '../../map/layers/parcelLayer';
+import { parcelSource, toParcelFeature } from '../../map/layers/parcelLayer';
 import type { SearchAreaPayload } from '../../map/hooks/useDrawCircle';
 
 export type SearchParcelsStep = 'idle' | 'drawing' | 'searching';
@@ -41,17 +38,16 @@ export function useSearchParcels() {
 
       if (currentToken !== requestTokenRef.current) return; // a newer search already won
 
-      const features = result.features.map((f) => {
-        const ringsInMapProjection = fromGeoJsonPolygonCoordinates(f.geometry.coordinates);
-        const feature = new Feature({ geometry: new Polygon(ringsInMapProjection) });
-        feature.setId(f.id);
-        feature.set('title', f.properties.title);
-        feature.set('status', f.properties.status);
-        feature.set('totalPrice', f.properties.totalPrice);
-        feature.set('currency', f.properties.currency);
-        feature.set('contact', f.properties.contact);
-        return feature;
-      });
+      const features = result.features.map((f) =>
+        toParcelFeature(f.geometry.coordinates, {
+          id: f.id,
+          title: f.properties.title,
+          status: f.properties.status,
+          totalPrice: f.properties.totalPrice,
+          currency: f.properties.currency,
+          contact: f.properties.contact,
+        }),
+      );
 
       // The spec is explicit: render ONLY the parcels intersecting the circle.
       parcelSource.clear();

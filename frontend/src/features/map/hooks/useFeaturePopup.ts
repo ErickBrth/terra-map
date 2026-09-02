@@ -39,7 +39,7 @@ export function useFeaturePopup(
     });
     map.addOverlay(overlay);
 
-    const onClick = (event: MapBrowserEvent<any>) => {
+    const onClick = (event: MapBrowserEvent<UIEvent>) => {
       const feature = map.forEachFeatureAtPixel(event.pixel, (f) => f, {
         layerFilter: (layer) => layer.get('name') === PARCEL_LAYER_NAME,
         hitTolerance: 4, // matters on touch screens: hitting a thin polygon border is hard otherwise
@@ -55,7 +55,7 @@ export function useFeaturePopup(
       overlay.setPosition(event.coordinate);
     };
 
-    const onPointerMove = (event: MapBrowserEvent<any>) => {
+    const onPointerMove = (event: MapBrowserEvent<UIEvent>) => {
       const target = map.getTargetElement();
       if (target) {
         target.style.cursor = map.hasFeatureAtPixel(event.pixel, {

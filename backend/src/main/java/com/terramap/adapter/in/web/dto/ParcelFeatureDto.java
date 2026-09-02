@@ -43,7 +43,7 @@ public record ParcelFeatureDto(
                         parcel.getStatus(),
                         new ContactDto(
                                 parcel.getContact().getName(),
-                                parcel.getContact().getMaskedEmail(),
+                                parcel.getContact().getEmail(),
                                 parcel.getContact().getPhone()
                         ),
                         parcel.getCreatedAt(),

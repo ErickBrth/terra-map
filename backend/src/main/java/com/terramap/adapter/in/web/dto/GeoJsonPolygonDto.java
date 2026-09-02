@@ -8,6 +8,7 @@ import org.locationtech.jts.geom.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * GeoJSON Polygon representation adhering strictly to RFC 7946.
@@ -31,36 +32,13 @@ public record GeoJsonPolygonDto(
             throw new GeometryValidationException("Coordinates array must not be empty");
         }
 
-        List<List<Double>> exteriorRingCoords = coordinates.get(0);
-        if (exteriorRingCoords == null || exteriorRingCoords.size() < 4) {
-            throw new GeometryValidationException("Polygon exterior ring must have at least 4 coordinates (closed ring)");
-        }
+        LinearRing shell = toRing(coordinates.get(0), "exterior");
 
-        Coordinate[] coords = new Coordinate[exteriorRingCoords.size()];
-        for (int i = 0; i < exteriorRingCoords.size(); i++) {
-            List<Double> pt = exteriorRingCoords.get(i);
-            if (pt == null || pt.size() < 2) {
-                throw new GeometryValidationException("Each coordinate must contain [longitude, latitude]");
-            }
-            double lon = pt.get(0);
-            double lat = pt.get(1);
-            coords[i] = new Coordinate(lon, lat);
-        }
-
-        LinearRing shell = GEOMETRY_FACTORY.createLinearRing(coords);
-
-        // Process interior rings (holes) if any
         LinearRing[] holes = null;
         if (coordinates.size() > 1) {
             holes = new LinearRing[coordinates.size() - 1];
             for (int h = 1; h < coordinates.size(); h++) {
-                List<List<Double>> holeCoordsList = coordinates.get(h);
-                Coordinate[] holeCoords = new Coordinate[holeCoordsList.size()];
-                for (int i = 0; i < holeCoordsList.size(); i++) {
-                    List<Double> pt = holeCoordsList.get(i);
-                    holeCoords[i] = new Coordinate(pt.get(0), pt.get(1));
-                }
-                holes[h - 1] = GEOMETRY_FACTORY.createLinearRing(holeCoords);
+                holes[h - 1] = toRing(coordinates.get(h), "interior");
             }
         }
 
@@ -69,29 +47,53 @@ public record GeoJsonPolygonDto(
         return polygon;
     }
 
+    /**
+     * Converts one GeoJSON ring to a JTS {@link LinearRing}, validating that it
+     * is closed (first coordinate == last) with a clear 422 before JTS itself
+     * would reject it with a generic {@code IllegalArgumentException} — which
+     * has no dedicated exception handler and would otherwise surface as a 400,
+     * contradicting the documented "422 = invalid geometry" contract.
+     */
+    private static LinearRing toRing(List<List<Double>> ringCoords, String ringName) {
+        if (ringCoords == null || ringCoords.size() < 4) {
+            throw new GeometryValidationException(
+                    "Polygon " + ringName + " ring must have at least 4 coordinates (closed ring)");
+        }
+
+        Coordinate[] coords = new Coordinate[ringCoords.size()];
+        for (int i = 0; i < ringCoords.size(); i++) {
+            List<Double> pt = ringCoords.get(i);
+            if (pt == null || pt.size() < 2) {
+                throw new GeometryValidationException("Each coordinate must contain [longitude, latitude]");
+            }
+            coords[i] = new Coordinate(pt.get(0), pt.get(1));
+        }
+
+        if (!Objects.equals(coords[0], coords[coords.length - 1])) {
+            throw new GeometryValidationException(
+                    "Polygon " + ringName + " ring must be closed (first point must equal last point)");
+        }
+
+        return GEOMETRY_FACTORY.createLinearRing(coords);
+    }
+
     public static GeoJsonPolygonDto fromJtsPolygon(Polygon polygon) {
         if (polygon == null) return null;
 
         List<List<List<Double>>> allRings = new ArrayList<>();
-
-        // Exterior ring
-        LineString exteriorRing = polygon.getExteriorRing();
-        List<List<Double>> exteriorCoords = new ArrayList<>();
-        for (Coordinate coord : exteriorRing.getCoordinates()) {
-            exteriorCoords.add(List.of(coord.getX(), coord.getY()));
-        }
-        allRings.add(exteriorCoords);
-
-        // Holes
+        allRings.add(ringToCoords(polygon.getExteriorRing()));
         for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-            LineString interiorRing = polygon.getInteriorRingN(i);
-            List<List<Double>> interiorCoords = new ArrayList<>();
-            for (Coordinate coord : interiorRing.getCoordinates()) {
-                interiorCoords.add(List.of(coord.getX(), coord.getY()));
-            }
-            allRings.add(interiorCoords);
+            allRings.add(ringToCoords(polygon.getInteriorRingN(i)));
         }
 
         return new GeoJsonPolygonDto("Polygon", allRings);
+    }
+
+    private static List<List<Double>> ringToCoords(LineString ring) {
+        List<List<Double>> coords = new ArrayList<>();
+        for (Coordinate coord : ring.getCoordinates()) {
+            coords.add(List.of(coord.getX(), coord.getY()));
+        }
+        return coords;
     }
 }

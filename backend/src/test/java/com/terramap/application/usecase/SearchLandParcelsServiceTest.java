@@ -35,7 +35,7 @@ class SearchLandParcelsServiceTest {
         when(repository.findWithinRadius(area, 0, 100)).thenReturn(List.of(parcel));
 
         SearchLandParcelsService service = new SearchLandParcelsService(repository);
-        SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(area, null, null, null, 0, 100);
+        SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(area, 0, 100);
 
         List<LandParcel> result = service.search(query);
 
@@ -49,7 +49,7 @@ class SearchLandParcelsServiceTest {
         when(repository.findWithinRadius(area, 0, 50)).thenReturn(List.of());
 
         SearchLandParcelsService service = new SearchLandParcelsService(repository);
-        SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(area, null, null, null, 0, 50);
+        SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(area, 0, 50);
 
         assertThat(service.search(query)).isEmpty();
     }

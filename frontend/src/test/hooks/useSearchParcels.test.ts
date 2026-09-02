@@ -3,14 +3,25 @@ import { renderHook, act } from '@testing-library/react';
 import { useSearchParcels } from '../../features/search/hooks/useSearchParcels';
 import * as landParcelApi from '../../api/landParcelApi';
 import { ApiError } from '../../api/ApiError';
+import { parcelSource, toParcelFeature } from '../../features/map/layers/parcelLayer';
 import type { ParcelFeatureCollection } from '../../types/api';
 
 describe('useSearchParcels', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    parcelSource.clear();
   });
 
-  it('handles search lifecycle and updates result count', async () => {
+  it('replaces whatever was on the map with exactly the search results', async () => {
+    // Simulates a parcel already visible on the map (e.g. just registered)
+    // that does NOT intersect the upcoming search circle.
+    parcelSource.addFeature(
+      toParcelFeature(
+        [[[-43.2, -22.91], [-43.19, -22.91], [-43.19, -22.9], [-43.2, -22.9], [-43.2, -22.91]]],
+        { id: 'stale-parcel', title: 'Stale', status: 'AVAILABLE' },
+      ),
+    );
+
     const mockSearchResults: ParcelFeatureCollection = {
       type: 'FeatureCollection',
       features: [
@@ -58,9 +69,23 @@ describe('useSearchParcels', () => {
     expect(result.current.step).toBe('idle');
     expect(result.current.resultCount).toBe(1);
     expect(result.current.radiusInMetres).toBeNull();
+
+    // The real, user-visible outcome, per spec: only the intersecting parcel
+    // remains — the stale one is gone.
+    const features = parcelSource.getFeatures();
+    expect(features).toHaveLength(1);
+    expect(features[0].getId()).toBe('p-1');
+    expect(features[0].get('title')).toBe('Found Plot');
+    expect(parcelSource.getFeatureById('stale-parcel')).toBeNull();
   });
 
-  it('displays real validation error message on search failure', async () => {
+  it('displays real validation error message on search failure and leaves the map untouched', async () => {
+    parcelSource.addFeature(toParcelFeature([[[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]], {
+      id: 'unrelated',
+      title: 'Unrelated',
+      status: 'AVAILABLE',
+    }));
+
     const errorResponse = new Response(
       JSON.stringify({
         status: 400,
@@ -82,6 +107,8 @@ describe('useSearchParcels', () => {
     });
 
     expect(result.current.errorMessage).toBe('Radius cannot exceed 50,000 metres');
+    // A failed search must not wipe out what was already on the map.
+    expect(parcelSource.getFeatureById('unrelated')).not.toBeNull();
   });
 
   it('handles cancellation', () => {

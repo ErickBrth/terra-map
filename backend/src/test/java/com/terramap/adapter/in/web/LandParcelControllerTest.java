@@ -145,8 +145,8 @@ class LandParcelControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.type").value("FeatureCollection"))
                 .andExpect(jsonPath("$.features[0].properties.title").value("Riverside lot"))
-                // masked email must never leak the raw address in search results
-                .andExpect(jsonPath("$.features[0].properties.contact.email").value("j***@example.com"));
+                // Fluxo B shows full contact info, same as GET /{id} — no masking rule in scope
+                .andExpect(jsonPath("$.features[0].properties.contact.email").value("jane@example.com"));
     }
 
     @Test

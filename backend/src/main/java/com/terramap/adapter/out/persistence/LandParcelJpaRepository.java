@@ -1,7 +1,6 @@
 package com.terramap.adapter.out.persistence;
 
 import com.terramap.adapter.out.persistence.entity.LandParcelEntity;
-import org.locationtech.jts.geom.Polygon;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,6 +25,10 @@ public interface LandParcelJpaRepository extends JpaRepository<LandParcelEntity,
      * it computes distances in metres on the ellipsoid and uses the functional GiST index
      * created by migration V2 ({@code idx_land_parcel_boundary_geography}).
      * Using {@code ST_Distance(...) < :radius} would force a sequential scan.
+     *
+     * <p>The {@code <->} operator in {@code ORDER BY} is PostGIS's KNN (k-nearest-neighbour)
+     * operator: it sorts by proximity using the same spatial index, rather than
+     * computing {@code ST_Distance} for every matching row and sorting that.
      */
     @Query(value = """
             SELECT *
@@ -35,10 +38,7 @@ public interface LandParcelJpaRepository extends JpaRepository<LandParcelEntity,
                       ST_SetSRID(ST_Point(:lon, :lat), 4326)::geography,
                       :radiusInMeters
                   )
-            ORDER BY ST_Distance(
-                         lp.boundary::geography,
-                         ST_SetSRID(ST_Point(:lon, :lat), 4326)::geography
-                     )
+            ORDER BY lp.boundary::geography <-> ST_SetSRID(ST_Point(:lon, :lat), 4326)::geography
             LIMIT :size OFFSET :offset
             """, nativeQuery = true)
     List<LandParcelEntity> findWithinRadius(

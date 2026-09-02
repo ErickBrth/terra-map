@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useRegisterParcel } from '../../features/parcel/hooks/useRegisterParcel';
 import * as landParcelApi from '../../api/landParcelApi';
 import { ApiError } from '../../api/ApiError';
+import { parcelSource } from '../../features/map/layers/parcelLayer';
 import type { GeoJsonPolygon, LandParcelResponse } from '../../types/api';
 
 describe('useRegisterParcel', () => {
@@ -13,6 +14,7 @@ describe('useRegisterParcel', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    parcelSource.clear();
   });
 
   it('manages lifecycle from idle -> drawing -> form-open -> submit -> idle', async () => {
@@ -55,9 +57,17 @@ describe('useRegisterParcel', () => {
 
     expect(result.current.step).toBe('idle');
     expect(result.current.pendingBoundary).toBeNull();
+
+    // The real, user-visible outcome: the parcel is now on the map, with the
+    // properties the popup will read.
+    const added = parcelSource.getFeatureById('parcel-123');
+    expect(added).not.toBeNull();
+    expect(added?.get('title')).toBe('Green Valley');
+    expect(added?.get('status')).toBe('AVAILABLE');
+    expect(added?.getGeometry()).toBeDefined();
   });
 
-  it('handles 409 Conflict overlap error', async () => {
+  it('handles 409 Conflict overlap error without adding anything to the map', async () => {
     const conflictResponse = new Response(
       JSON.stringify({
         status: 409,
@@ -87,6 +97,7 @@ describe('useRegisterParcel', () => {
 
     expect(result.current.step).toBe('form-open');
     expect(result.current.errorMessage).toContain('overlaps an existing parcel');
+    expect(parcelSource.getFeatures()).toHaveLength(0);
   });
 
   it('handles cancellation', () => {

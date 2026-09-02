@@ -13,8 +13,11 @@ public record ParcelFeatureCollectionDto(
 
         Metadata metadata
 ) {
+    /** {@code returned} is the size of this page, not a count across all pages —
+     * computing a true total would require a second COUNT query the MVP scope
+     * doesn't need yet. Named accordingly so the field can't be misread as one. */
     public record Metadata(
-            int total,
+            int returned,
             int page,
             int size,
             double radiusInMeters

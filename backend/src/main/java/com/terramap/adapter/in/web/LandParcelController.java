@@ -88,12 +88,8 @@ public class LandParcelController {
         Point center = request.center().toJtsPoint();
         SearchArea searchArea = new SearchArea(center, request.radiusInMeters());
 
-        SearchFiltersDto filters = request.filters();
         SearchLandParcelsUseCase.Query query = new SearchLandParcelsUseCase.Query(
                 searchArea,
-                filters != null ? filters.maxPrice() : null,
-                filters != null ? filters.minAreaInSquareMeters() : null,
-                filters != null ? filters.status() : null,
                 request.effectivePage(),
                 request.effectiveSize()
         );

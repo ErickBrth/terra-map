@@ -1,6 +1,10 @@
+import Feature from 'ol/Feature';
+import Polygon from 'ol/geom/Polygon';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
 import { Style, Fill, Stroke } from 'ol/style';
+import { fromGeoJsonPolygonCoordinates } from '../../../shared/geo/projection';
+import type { ContactInfo } from '../../../types/api';
 
 export const PARCEL_LAYER_NAME = 'parcels';
 
@@ -34,4 +38,34 @@ export function createParcelLayer(): VectorLayer<VectorSource> {
   });
   layer.set('name', PARCEL_LAYER_NAME);
   return layer;
+}
+
+export interface ParcelFeatureProps {
+  id: string;
+  title: string;
+  status: string;
+  totalPrice?: number;
+  currency?: string;
+  description?: string;
+  contact?: ContactInfo;
+}
+
+/**
+ * Builds an ol.Feature for a parcel, ready to add to parcelSource. Both the
+ * "just registered" flow and the "search results" flow need the exact same
+ * shape (GeoJSON coordinates converted to map projection, same property
+ * names) so the popup works identically regardless of where the parcel came
+ * from — this is the single place that construction happens.
+ */
+export function toParcelFeature(coordinates: number[][][], props: ParcelFeatureProps): Feature {
+  const ringsInMapProjection = fromGeoJsonPolygonCoordinates(coordinates);
+  const feature = new Feature({ geometry: new Polygon(ringsInMapProjection) });
+  feature.setId(props.id);
+  feature.set('title', props.title);
+  feature.set('status', props.status);
+  feature.set('totalPrice', props.totalPrice);
+  feature.set('currency', props.currency);
+  feature.set('description', props.description);
+  feature.set('contact', props.contact);
+  return feature;
 }
