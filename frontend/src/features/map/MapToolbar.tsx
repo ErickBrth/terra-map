@@ -1,23 +1,49 @@
+import { RadiusBadge } from '../search/RadiusBadge';
+
 interface MapToolbarProps {
-  isDrawing: boolean;
-  onStartDrawing: () => void;
-  onCancelDrawing: () => void;
+  mode: 'idle' | 'draw-parcel' | 'draw-circle';
+  radiusInMetres: number | null;
+  resultCount: number | null;
+  onStartRegister: () => void;
+  onStartSearch: () => void;
+  onCancel: () => void;
 }
 
-/**
- * Toolbar overlaid on the map. In "navigate" mode it shows the "Register a parcel"
- * button; once the user clicks it, the toolbar switches to a hint + cancel button.
- */
-export function MapToolbar({ isDrawing, onStartDrawing, onCancelDrawing }: MapToolbarProps) {
+export function MapToolbar({
+  mode,
+  radiusInMetres,
+  resultCount,
+  onStartRegister,
+  onStartSearch,
+  onCancel,
+}: MapToolbarProps) {
+  if (mode === 'draw-parcel') {
+    return (
+      <div className="map-toolbar">
+        <span>Click on the map to draw the parcel boundary.</span>
+        <button onClick={onCancel}>Cancel</button>
+      </div>
+    );
+  }
+
+  if (mode === 'draw-circle') {
+    return (
+      <div className="map-toolbar">
+        <span>Click and drag to draw the search area.</span>
+        <RadiusBadge radiusInMetres={radiusInMetres} />
+        <button onClick={onCancel}>Cancel</button>
+      </div>
+    );
+  }
+
   return (
     <div className="map-toolbar">
-      {isDrawing ? (
-        <>
-          <span>Click on the map to draw the parcel boundary.</span>
-          <button onClick={onCancelDrawing}>Cancel</button>
-        </>
-      ) : (
-        <button onClick={onStartDrawing}>Register a parcel</button>
+      <button onClick={onStartRegister}>Register a parcel</button>
+      <button onClick={onStartSearch}>Search parcels</button>
+      {resultCount !== null && (
+        <span className="result-count">
+          {resultCount} {resultCount === 1 ? 'parcel' : 'parcels'} found
+        </span>
       )}
     </div>
   );
