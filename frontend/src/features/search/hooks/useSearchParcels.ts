@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
 import { searchParcels } from '../../../api/landParcelApi';
+import { ApiError } from '../../../api/ApiError';
 import { fromGeoJsonPolygonCoordinates } from '../../../shared/geo/projection';
 import { parcelSource } from '../../map/layers/parcelLayer';
 import type { SearchAreaPayload } from '../../map/hooks/useDrawCircle';
@@ -58,9 +59,15 @@ export function useSearchParcels() {
       setResultCount(features.length);
       setRadiusInMetres(null);
       setStep('idle');
-    } catch {
+    } catch (error) {
       if (currentToken !== requestTokenRef.current) return;
-      setErrorMessage('Search failed. Please try drawing the circle again.');
+      if (error instanceof ApiError) {
+        setErrorMessage(error.userMessage);
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('Search failed. Please try drawing the circle again.');
+      }
       setRadiusInMetres(null);
       setStep('idle');
     }

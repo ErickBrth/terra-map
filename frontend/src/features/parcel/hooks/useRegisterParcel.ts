@@ -49,12 +49,16 @@ export function useRegisterParcel() {
       setPendingBoundary(null);
       setStep('idle');
     } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        setErrorMessage('This boundary overlaps an existing parcel. Draw a different area.');
-      } else if (error instanceof ApiError && error.status === 422) {
-        setErrorMessage(error.problem.detail ?? 'Invalid boundary geometry.');
-      } else if (error instanceof ApiError && error.status === 400) {
-        setErrorMessage('Please check the required fields and try again.');
+      if (error instanceof ApiError) {
+        if (error.status === 409) {
+          setErrorMessage(error.problem.detail ?? 'This boundary overlaps an existing parcel. Draw a different area.');
+        } else if (error.status === 422) {
+          setErrorMessage(error.problem.detail ?? 'Invalid boundary geometry.');
+        } else {
+          setErrorMessage(error.userMessage);
+        }
+      } else if (error instanceof Error) {
+        setErrorMessage(error.message);
       } else {
         setErrorMessage('Something went wrong saving the parcel. Please try again.');
       }

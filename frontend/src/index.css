@@ -72,6 +72,14 @@ html, body, #root {
   font-size: 0.9rem;
 }
 
+.radius-badge--exceeded {
+  color: #cf222e;
+  background: #ffebe9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 129, 130, 0.4);
+}
+
 .result-count {
   color: #57606a;
   font-size: 0.85rem;

@@ -10,10 +10,23 @@ export class ApiError extends Error {
   readonly problem: ApiProblemDetail;
 
   private constructor(problem: ApiProblemDetail) {
-    super(problem.detail ?? problem.title ?? `Request failed with status ${problem.status}`);
+    const message = ApiError.extractMessage(problem);
+    super(message);
     this.name = 'ApiError';
     this.status = problem.status;
     this.problem = problem;
+  }
+
+  private static extractMessage(problem: ApiProblemDetail): string {
+    // If specific field validation errors are present, extract them directly
+    if (problem.errors && Object.keys(problem.errors).length > 0) {
+      return Object.values(problem.errors).join('. ');
+    }
+    return problem.detail ?? problem.title ?? `Request failed with status ${problem.status}`;
+  }
+
+  get userMessage(): string {
+    return ApiError.extractMessage(this.problem);
   }
 
   static async fromResponse(response: Response): Promise<ApiError> {
