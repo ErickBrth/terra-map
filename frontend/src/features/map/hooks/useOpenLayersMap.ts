@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { defaults as defaultControls } from 'ol/control/defaults';
@@ -19,13 +19,13 @@ const INITIAL_ZOOM = 13;
  * DOM node.
  */
 export function useOpenLayersMap(containerRef: RefObject<HTMLDivElement | null>) {
-  const mapRef = useRef<Map | null>(null);
+  const [map, setMap] = useState<Map | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
 
-    const map = new Map({
+    const mapInstance = new Map({
       target: containerRef.current,
       layers: [createBaseLayer()],
       view: new View({
@@ -36,16 +36,16 @@ export function useOpenLayersMap(containerRef: RefObject<HTMLDivElement | null>)
       controls: defaultControls({ attribution: true }),
     });
 
-    mapRef.current = map;
+    setMap(mapInstance);
     setIsReady(true);
 
     return () => {
-      map.setTarget(undefined); // detaches DOM listeners
-      map.dispose(); // releases canvas/WebGL resources
-      mapRef.current = null;
+      mapInstance.setTarget(undefined); // detaches DOM listeners
+      mapInstance.dispose(); // releases canvas/WebGL resources
+      setMap(null);
       setIsReady(false);
     };
   }, [containerRef]);
 
-  return { map: mapRef.current, isReady };
+  return { map, isReady };
 }

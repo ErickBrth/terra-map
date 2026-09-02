@@ -27,7 +27,10 @@ export function useDrawPolygon(
 ) {
   // Keeps the callback fresh without re-creating the interaction on every render.
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (!map || !active) return;
@@ -43,12 +46,11 @@ export function useDrawPolygon(
     draw.on('drawend', (event) => {
       const geometry = event.feature.getGeometry() as Polygon;
       onCompleteRef.current(toGeoJsonPolygon(geometry));
-      source.clear(); // the parcel is now owned by the form/API flow, not the sketch layer
+      source.clear();
     });
 
     map.addLayer(layer);
     map.addInteraction(draw);
-    // Snap must be added after Draw so it takes priority when both could react to a pointer event.
     map.addInteraction(snap);
 
     return () => {

@@ -32,9 +32,15 @@ export function useDrawCircle(
   onComplete: (area: SearchAreaPayload) => void,
 ) {
   const onRadiusChangeRef = useRef(onRadiusChange);
-  onRadiusChangeRef.current = onRadiusChange;
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+
+  useEffect(() => {
+    onRadiusChangeRef.current = onRadiusChange;
+  }, [onRadiusChange]);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     if (!map || !active) return;
